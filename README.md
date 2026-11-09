@@ -24,6 +24,20 @@ python3 -m venv .venv
 Open http://localhost:8000. On first boot a random admin password is written to
 `backend/data/admin_password.txt` — use it to sign in (username `admin`).
 
+### Windows
+
+Use the included batch files (double-click or run from a terminal):
+
+```bat
+setup.bat    REM one-time: creates .venv, installs backend + frontend deps
+start.bat    REM production: builds frontend and serves on http://localhost:8000
+dev.bat      REM development: backend hot-reload (:8000) + Vite dev server (:5173)
+```
+
+`start.bat` accepts an optional port: `start.bat 3000`. The `.bat` files handle
+Windows specifics (`python` instead of `python3`, `.venv\Scripts\...`, backslash
+paths). A `.gitattributes` keeps `.bat` files checked out with CRLF line endings.
+
 The default provider is `mock`, so it produces realistic demo data for any
 handle — add handles on the **Handles** page and click **Check all**.
 
