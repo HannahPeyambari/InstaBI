@@ -1,0 +1,21 @@
+# --- Web framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# --- Config ---
+pydantic-settings==2.7.1
+
+# --- Persistence ---
+SQLAlchemy==2.0.36
+
+# --- Scheduling ---
+APScheduler==3.11.0
+
+# --- Instagram scraping (unofficial API) ---
+instagrapi==3.2.8
+
+# --- Tests ---
+pytest==8.3.4
+pytest-asyncio==0.25.0
+httpx==0.28.1
