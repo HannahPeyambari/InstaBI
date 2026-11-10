@@ -44,6 +44,7 @@ export const api = {
   me: () => request("/api/auth/me", { auth: true }),
 
   listHandles: () => request("/api/handles"),
+  listFailed: () => request("/api/handles/failed"),
   createHandle: (body) => request("/api/handles", { method: "POST", body }),
   bulkAdd: (body) => request("/api/handles/bulk", { method: "POST", body }),
   updateHandle: (id, body) => request(`/api/handles/${id}`, { method: "PUT", body }),

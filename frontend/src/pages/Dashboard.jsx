@@ -2,19 +2,21 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { api } from "../api.js";
-import { StatCard, fmtNum, fmtDelta, fmtTime, timeAgo } from "../components/common.jsx";
+import { StatCard, fmtNum, fmtDelta, fmtTime, timeAgo, useToast } from "../components/common.jsx";
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
   async function load() {
     setLoading(true);
     try {
       const o = await api.overview();
       const s = await api.schedulerStatus();
-      setData({ ...o, schedule: s });
+      const f = await api.listFailed();
+      setData({ ...o, schedule: s, failed: f });
     } finally {
       setLoading(false);
     }
@@ -30,6 +32,28 @@ export default function Dashboard() {
       await load();
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function deleteHandle(id, username) {
+    if (!confirm(`Remove @${username} and all its history?`)) return;
+    try {
+      await api.deleteHandle(id);
+      toast(`Removed @${username}`, "success");
+      await load();
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  }
+
+  async function deleteAllFailed() {
+    if (!confirm(`Remove all ${data.failed.length} failed handle(s)? This deletes them and their history.`)) return;
+    try {
+      const res = await api.deleteFailed();
+      toast(`Removed ${res.deleted} failed handle(s)`, "success");
+      await load();
+    } catch (err) {
+      toast(err.message, "error");
     }
   }
 
@@ -84,6 +108,37 @@ export default function Dashboard() {
           sub={`cron: ${data.schedule?.cron || "—"}`}
         />
       </div>
+
+      {data.failed && data.failed.length > 0 && (
+        <div className="card" style={{ marginBottom: 18, borderLeft: "3px solid var(--red)" }}>
+          <div className="spread" style={{ marginBottom: 10 }}>
+            <strong>⚠ Failed handles ({data.failed.length})</strong>
+            <button className="btn secondary sm" onClick={deleteAllFailed}>Delete all failed</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Account</th>
+                <th>Error</th>
+                <th>Last check</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.failed.map((h) => (
+                <tr key={h.id}>
+                  <td><strong>@{h.username}</strong></td>
+                  <td className="faint" style={{ color: "var(--red)", maxWidth: 420 }}>{h.last_error}</td>
+                  <td className="faint">{h.last_checked_at ? timeAgo(h.last_checked_at) : "never"}</td>
+                  <td>
+                    <button className="btn danger sm" onClick={() => deleteHandle(h.id, h.username)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="grid grid-2" style={{ marginBottom: 18 }}>
         <div className="card chart-card">
