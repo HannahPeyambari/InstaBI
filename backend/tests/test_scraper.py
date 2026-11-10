@@ -79,3 +79,32 @@ def test_requires_auth(client):
 def test_login_rejects_bad_password(client):
     r = client.post("/api/auth/login", json={"username": "admin", "password": "wrong"})
     assert r.status_code == 401
+
+
+def test_mock_never_fails():
+    c = MockClient()
+    for name in ["a", "b", "c", "natgeo", "nasa", "xyz", "test", "user1", "user2", "user3"]:
+        stats = c.get_stats(name)
+        assert stats.follower_count > 0
+
+
+def test_delete_failed_handles(client, auth_headers):
+    from backend.app.database import SessionLocal
+    from backend.app import models
+
+    client.post("/api/handles/bulk", json={"text": "keep1, bad1, keep2"}, headers=auth_headers)
+
+    # Mark 'bad1' as failed directly in the DB.
+    db = SessionLocal()
+    h = db.query(models.Handle).filter(models.Handle.username == "bad1").first()
+    h.last_status = "error"
+    db.commit()
+    db.close()
+
+    r = client.post("/api/handles/delete-failed", headers=auth_headers)
+    assert r.status_code == 200
+    assert r.json()["deleted"] == 1
+
+    usernames = [x["username"] for x in client.get("/api/handles", headers=auth_headers).json()]
+    assert "bad1" not in usernames
+    assert "keep1" in usernames and "keep2" in usernames

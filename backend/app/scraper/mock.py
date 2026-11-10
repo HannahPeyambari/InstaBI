@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import random
 
-from .base import ProfileStats, ScraperError
+from .base import ProfileStats
 
 _VERBS = ["Sharing", "Posting", "Creating", "Launching", "Teaching", "Building"]
 
@@ -28,9 +28,8 @@ class MockClient:
         username = username.lstrip("@")
         rng = random.Random(_seed(username))
 
-        if rng.random() < 0.05:  # rare simulated miss
-            raise ScraperError("Profile not found (mock)", kind="not_found")
-
+        # Always succeeds in mock mode — every handle returns realistic data so
+        # the demo never shows spurious "not found" failures.
         base_followers = rng.randint(2_000, 8_000_000)
         # Small per-call drift so each daily run differs slightly.
         drift = rng.randint(-3, 6)

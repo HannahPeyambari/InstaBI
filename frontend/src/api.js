@@ -50,6 +50,7 @@ export const api = {
   deleteHandle: (id) => request(`/api/handles/${id}`, { method: "DELETE" }),
   checkHandle: (id) => request(`/api/handles/${id}/check`, { method: "POST" }),
   checkAll: () => request("/api/handles/check-all", { method: "POST" }),
+  deleteFailed: () => request("/api/handles/delete-failed", { method: "POST" }),
 
   overview: () => request("/api/overview"),
   compare: (limit = 50) => request(`/api/compare?limit=${limit}`),

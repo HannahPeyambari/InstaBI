@@ -132,6 +132,21 @@ def check_all(db: Session = Depends(get_db)):
     return {"run": run.to_dict()}
 
 
+@router.post("/delete-failed", response_model=dict)
+def delete_failed(db: Session = Depends(get_db)):
+    """Remove every tracked handle whose most recent check failed.
+
+    Covers 'not found' accounts and any other scraping errors. The handle and
+    all of its snapshot history are deleted.
+    """
+    failed = db.scalars(select(models.Handle).where(models.Handle.last_status == "error")).all()
+    usernames = [h.username for h in failed]
+    for h in failed:
+        db.delete(h)
+    db.commit()
+    return {"deleted": len(usernames), "usernames": usernames}
+
+
 @router.get("/provider/health", response_model=dict)
 def provider_health():
     ok, message = manager.healthcheck()
