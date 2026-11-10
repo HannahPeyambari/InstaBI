@@ -166,23 +166,37 @@ export default function Dashboard() {
 
         <div className="card">
           <div className="spread" style={{ marginBottom: 10 }}>
-            <strong>Top gainers (24h)</strong>
+            <strong>🏆 Top 10 by followers gained (24h)</strong>
           </div>
           {data.top_gainers?.length ? (
             <table>
+              <thead>
+                <tr>
+                  <th style={{ width: 40 }}>#</th>
+                  <th>Account</th>
+                  <th>Gained</th>
+                  <th>Followers</th>
+                </tr>
+              </thead>
               <tbody>
-                {data.top_gainers.map((g) => (
+                {data.top_gainers.map((g, i) => (
                   <tr key={g.username}>
-                    <td>@{g.username}</td>
+                    <td>
+                      <span className={`rank ${i === 0 ? "r1" : i === 1 ? "r2" : i === 2 ? "r3" : ""}`}>{i + 1}</span>
+                    </td>
+                    <td><strong>@{g.username}</strong></td>
                     <td>
                       <span className={`delta ${g.change >= 0 ? "up" : "down"}`}>{fmtDelta(g.change)}</span>
                     </td>
+                    <td className="faint">{fmtNum(g.followers)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : (
-            <div className="empty">No 24h changes recorded yet.</div>
+            <div className="empty">
+              No 24h changes yet. Run <strong>Check all</strong> at least twice to build history.
+            </div>
           )}
         </div>
       </div>

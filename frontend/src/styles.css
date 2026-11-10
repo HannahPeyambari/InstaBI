@@ -345,6 +345,33 @@ tr:hover td {
   background: rgba(46, 204, 113, 0.12);
 }
 
+/* ---- Rank badges (top-10 lists) ---- */
+.rank {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: var(--bg-hover);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: center;
+}
+.rank.r1 {
+  background: rgba(255, 176, 32, 0.18);
+  color: var(--amber);
+}
+.rank.r2 {
+  background: rgba(180, 188, 198, 0.16);
+  color: #c6ccd6;
+}
+.rank.r3 {
+  background: rgba(205, 127, 50, 0.18);
+  color: #cd7f32;
+}
+
 /* ---- Misc ---- */
 .muted {
   color: var(--text-dim);

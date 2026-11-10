@@ -47,7 +47,7 @@ def overview(db: Session = Depends(get_db)):
     followers_total = sum(s.follower_count for s in latest.values() if s.status == "ok")
 
     # 24h change: compare latest vs previous snapshot per handle.
-    changes: list[tuple[str, int]] = []
+    changes: list[tuple[str, int, int]] = []
     for h in active:
         snap = latest.get(h.id)
         if not snap or snap.status != "ok":
@@ -57,9 +57,9 @@ def overview(db: Session = Depends(get_db)):
             change = snap.follower_count - prev.follower_count
             # Only count if the previous capture is within ~24h of latest.
             if (snap.captured_at - prev.captured_at) <= timedelta(hours=26):
-                changes.append((h.username, change))
-    followers_change_24h = sum(c for _, c in changes)
-    top_gainers = sorted(changes, key=lambda x: x[1], reverse=True)[:5]
+                changes.append((h.username, change, snap.follower_count))
+    followers_change_24h = sum(c for _, c, _ in changes)
+    top_gainers = sorted(changes, key=lambda x: x[1], reverse=True)[:10]
 
     # Last run log.
     last_run = db.scalar(select(models.RunLog).order_by(models.RunLog.started_at.desc()).limit(1))
@@ -93,7 +93,7 @@ def overview(db: Session = Depends(get_db)):
         "last_run": last_run.to_dict() if last_run else None,
         "followers_total": followers_total,
         "followers_change_24h": followers_change_24h,
-        "top_gainers": [{"username": u, "change": c} for u, c in top_gainers],
+        "top_gainers": [{"username": u, "change": c, "followers": f} for u, c, f in top_gainers],
         "recent_runs": recent_runs,
         "series": series,
     }
