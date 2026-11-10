@@ -14,6 +14,7 @@ export default function Handles() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
+  const [busyDelete, setBusyDelete] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [bulkText, setBulkText] = useState("");
   const [showBulk, setShowBulk] = useState(false);
@@ -85,6 +86,22 @@ export default function Handles() {
     }
   }
 
+  async function deleteFailed() {
+    const failed = items.filter((i) => i.handle.last_status === "error");
+    const names = failed.map((i) => "@" + i.handle.username).join(", ");
+    if (!confirm(`Remove ${failed.length} failed handle(s)?\n\n${names}\n\nThis deletes the handle and all its history.`)) return;
+    setBusyDelete(true);
+    try {
+      const res = await api.deleteFailed();
+      toast(res.deleted ? `Removed ${res.deleted} failed handle(s)` : "No failed handles to remove", "success");
+      await load();
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      setBusyDelete(false);
+    }
+  }
+
   async function toggle(item) {
     try {
       await api.updateHandle(item.handle.id, { active: !item.handle.active });
@@ -112,9 +129,14 @@ export default function Handles() {
           <h1>Handles</h1>
           <p>Manage the Instagram accounts you track.</p>
         </div>
-        <button className="btn" onClick={checkAll} disabled={busyId === "all" || items.length === 0}>
-          {busyId === "all" ? "Checking…" : "▶ Check all"}
-        </button>
+        <div className="row">
+          <button className="btn secondary" onClick={deleteFailed} disabled={busyDelete}>
+            {busyDelete ? "Deleting…" : "🗑 Delete failed"}
+          </button>
+          <button className="btn" onClick={checkAll} disabled={busyId === "all" || items.length === 0}>
+            {busyId === "all" ? "Checking…" : "▶ Check all"}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-2" style={{ marginBottom: 22 }}>
