@@ -18,6 +18,7 @@ export default function Handles() {
   const [newUsername, setNewUsername] = useState("");
   const [bulkText, setBulkText] = useState("");
   const [showBulk, setShowBulk] = useState(false);
+  const [filter, setFilter] = useState("all");
   const toast = useToast();
 
   async function load() {
@@ -32,6 +33,14 @@ export default function Handles() {
   useEffect(() => {
     load();
   }, []);
+
+  const failedCount = items.filter((i) => i.handle.last_status === "error").length;
+  const activeCount = items.filter((i) => i.handle.active).length;
+  const filtered = items.filter((item) => {
+    if (filter === "failed") return item.handle.last_status === "error";
+    if (filter === "active") return item.handle.active;
+    return true;
+  });
 
   async function addOne(e) {
     e.preventDefault();
@@ -189,8 +198,21 @@ export default function Handles() {
         <div className="card empty">
           No handles yet. Add one above or use bulk import to get started.
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="card empty">No handles match the "{filter}" filter.</div>
       ) : (
         <div className="card table-wrap">
+          <div className="toolbar" style={{ marginBottom: 12 }}>
+            <button className={`btn sm ${filter === "all" ? "secondary" : "ghost"}`} onClick={() => setFilter("all")}>
+              All ({items.length})
+            </button>
+            <button className={`btn sm ${filter === "failed" ? "secondary" : "ghost"}`} onClick={() => setFilter("failed")}>
+              Failed ({failedCount})
+            </button>
+            <button className={`btn sm ${filter === "active" ? "secondary" : "ghost"}`} onClick={() => setFilter("active")}>
+              Active ({activeCount})
+            </button>
+          </div>
           <table>
             <thead>
               <tr>
@@ -205,11 +227,11 @@ export default function Handles() {
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => {
+              {filtered.map((item) => {
                 const h = item.handle;
                 const s = item.snapshot;
                 return (
-                  <tr key={h.id}>
+                  <tr key={h.id} style={h.last_status === "error" ? { background: "rgba(255,92,92,0.06)" } : undefined}>
                     <td>
                       <div className="row">
                         <Avatar src={s?.avatar_url} username={h.username} />

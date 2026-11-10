@@ -46,6 +46,17 @@ def list_handles(db: Session = Depends(get_db)):
     return [h.to_dict() for h in db.scalars(select(models.Handle).order_by(models.Handle.created_at)).all()]
 
 
+@router.get("/failed", response_model=list[HandleOut])
+def list_failed(db: Session = Depends(get_db)):
+    """Return handles whose most recent check failed (with error details)."""
+    handles = db.scalars(
+        select(models.Handle)
+        .where(models.Handle.last_status == "error")
+        .order_by(models.Handle.username)
+    ).all()
+    return [h.to_dict() for h in handles]
+
+
 @router.post("", response_model=HandleOut, status_code=201)
 def create_handle(payload: HandleCreate, db: Session = Depends(get_db)):
     username = _normalize(payload.username)

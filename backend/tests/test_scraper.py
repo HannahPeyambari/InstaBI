@@ -108,3 +108,26 @@ def test_delete_failed_handles(client, auth_headers):
     usernames = [x["username"] for x in client.get("/api/handles", headers=auth_headers).json()]
     assert "bad1" not in usernames
     assert "keep1" in usernames and "keep2" in usernames
+
+
+def test_failed_handles_endpoint(client, auth_headers):
+    from backend.app.database import SessionLocal
+    from backend.app import models
+
+    client.post("/api/handles/bulk", json={"text": "ok1, bad1, ok2"}, headers=auth_headers)
+
+    # Mark 'bad1' as failed directly in the DB.
+    db = SessionLocal()
+    h = db.query(models.Handle).filter(models.Handle.username == "bad1").first()
+    h.last_status = "error"
+    h.last_error = "[not_found] Profile not found"
+    db.commit()
+    db.close()
+
+    r = client.get("/api/handles/failed", headers=auth_headers)
+    assert r.status_code == 200
+    failed = r.json()
+    assert len(failed) == 1
+    assert failed[0]["username"] == "bad1"
+    assert failed[0]["last_status"] == "error"
+    assert "not_found" in (failed[0]["last_error"] or "")
