@@ -20,12 +20,33 @@ def test_mock_returns_realistic_stats():
     assert stats.top_post["like_count"] > 0
 
 
-def test_mock_is_deterministic_for_same_handle():
+def test_mock_produces_valid_stats():
     c = MockClient()
     a = c.get_stats("nasa")
     b = c.get_stats("nasa")
-    assert a.follower_count == b.follower_count
-    assert a.engagement_rate == b.engagement_rate
+    for stats in (a, b):
+        assert stats.username == "nasa"
+        assert 0 < stats.follower_count < 10_000_000
+        assert stats.following_count > 0
+        assert stats.media_count > 0
+        assert 0 <= stats.engagement_rate < 50
+
+
+def test_overview_top_gainers(client, auth_headers):
+    # Two runs build history so 24h changes are computed.
+    client.post("/api/handles/bulk", json={"text": "g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12"}, headers=auth_headers)
+    client.post("/api/handles/check-all", headers=auth_headers)
+    client.post("/api/handles/check-all", headers=auth_headers)
+    ov = client.get("/api/overview", headers=auth_headers).json()
+    tg = ov["top_gainers"]
+    assert isinstance(tg, list)
+    assert len(tg) <= 10
+    if tg:
+        assert "username" in tg[0]
+        assert "change" in tg[0]
+        assert "followers" in tg[0]
+        changes = [g["change"] for g in tg]
+        assert changes == sorted(changes, reverse=True)
 
 
 def test_mock_healthcheck():

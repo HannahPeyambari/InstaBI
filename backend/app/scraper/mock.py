@@ -31,13 +31,15 @@ class MockClient:
         # Always succeeds in mock mode — every handle returns realistic data so
         # the demo never shows spurious "not found" failures.
         base_followers = rng.randint(2_000, 8_000_000)
-        # Small per-call drift so each daily run differs slightly.
-        drift = rng.randint(-3, 6)
-        followers = max(0, base_followers + drift)
+        # Per-check (≈24h) follower change: a small random walk so the 24h
+        # top-gainers list shows meaningful movement. The baseline stays
+        # stable per account; only the recent change varies between checks.
+        change = int(base_followers * random.uniform(-0.01, 0.03))
+        followers = max(0, base_followers + change)
         following = rng.randint(80, 2_500)
         media = rng.randint(20, 2_500)
         is_private = rng.random() < 0.08
-        is_verified = followers > 500_000 and rng.random() < 0.6
+        is_verified = base_followers > 500_000 and rng.random() < 0.6
 
         recent_posts = min(self.recent_media_count, media) if not is_private else 0
 

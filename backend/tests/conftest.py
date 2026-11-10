@@ -17,6 +17,12 @@ from fastapi.testclient import TestClient
 @pytest.fixture()
 def client():
     from backend.app.main import app
+    from backend.app.database import Base, engine
+    from backend.app import models  # noqa: F401  (register mappings)
+
+    # Reset the database for test isolation.
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
     with TestClient(app) as c:
         yield c
