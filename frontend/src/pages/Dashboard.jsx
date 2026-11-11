@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { api } from "../api.js";
 import { StatCard, fmtNum, fmtDelta, fmtTime, timeAgo, useToast } from "../components/common.jsx";
 
@@ -62,6 +62,7 @@ export default function Dashboard() {
   const series = (data.series || []).map((p) => ({
     ts: new Date(p.ts).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
     followers: p.followers,
+    gained: p.gained ?? 0,
   }));
   const lastRun = data.last_run;
 
@@ -143,8 +144,8 @@ export default function Dashboard() {
       <div className="grid grid-2" style={{ marginBottom: 18 }}>
         <div className="card chart-card">
           <div className="spread" style={{ marginBottom: 10 }}>
-            <strong>Followers trend</strong>
-            <span className="faint">per run</span>
+          <strong>Followers &amp; followers gained trend</strong>
+          <span className="faint">per run</span>
           </div>
           {series.length < 2 ? (
             <div className="empty">Not enough runs yet to chart a trend. Run a check a few times.</div>
@@ -158,7 +159,9 @@ export default function Dashboard() {
                   contentStyle={{ background: "#1c2029", border: "1px solid #2a3040", borderRadius: 8 }}
                   labelStyle={{ color: "#9aa3b2" }}
                 />
-                <Line type="monotone" dataKey="followers" stroke="#7c5cff" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Line type="monotone" dataKey="followers" name="Followers" stroke="#7c5cff" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="gained" name="Gained" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           )}

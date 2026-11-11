@@ -49,6 +49,26 @@ def test_overview_top_gainers(client, auth_headers):
         assert changes == sorted(changes, reverse=True)
 
 
+def test_overview_series_has_gained(client, auth_headers):
+    # Multiple runs build a trend series with both followers and gained.
+    client.post("/api/handles/bulk", json={"text": "t1, t2, t3"}, headers=auth_headers)
+    for _ in range(3):
+        client.post("/api/handles/check-all", headers=auth_headers)
+    ov = client.get("/api/overview", headers=auth_headers).json()
+    series = ov["series"]
+    assert isinstance(series, list)
+    assert len(series) >= 2
+    for point in series:
+        assert "followers" in point
+        assert "gained" in point
+        assert isinstance(point["gained"], int)
+    # First point has zero gained (no prior baseline).
+    assert series[0]["gained"] == 0
+    # Gain equals delta between consecutive follower totals.
+    for i in range(1, len(series)):
+        assert series[i]["gained"] == series[i]["followers"] - series[i - 1]["followers"]
+
+
 def test_mock_healthcheck():
     ok, msg = MockClient().healthcheck()
     assert ok is True
