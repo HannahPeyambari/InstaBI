@@ -59,7 +59,7 @@ def overview(db: Session = Depends(get_db)):
             if (snap.captured_at - prev.captured_at) <= timedelta(hours=26):
                 changes.append((h.username, change, snap.follower_count))
     followers_change_24h = sum(c for _, c, _ in changes)
-    top_gainers = sorted(changes, key=lambda x: x[1], reverse=True)[:10]
+    top_gainers = sorted(changes, key=lambda x: x[1], reverse=True)[:5]
 
     # Last run log.
     last_run = db.scalar(select(models.RunLog).order_by(models.RunLog.started_at.desc()).limit(1))

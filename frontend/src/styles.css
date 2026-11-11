@@ -345,7 +345,7 @@ tr:hover td {
   background: rgba(46, 204, 113, 0.12);
 }
 
-/* ---- Rank badges (top-10 lists) ---- */
+/* ---- Rank badges (top-5 lists) ---- */
 .rank {
   display: inline-grid;
   place-items: center;
