@@ -166,7 +166,7 @@ export default function Dashboard() {
 
         <div className="card">
           <div className="spread" style={{ marginBottom: 10 }}>
-            <strong>🏆 Top 10 by followers gained (24h)</strong>
+            <strong>🏆 Top 5 by followers gained (24h)</strong>
           </div>
           {data.top_gainers?.length ? (
             <table>

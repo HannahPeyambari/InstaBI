@@ -40,7 +40,7 @@ def test_overview_top_gainers(client, auth_headers):
     ov = client.get("/api/overview", headers=auth_headers).json()
     tg = ov["top_gainers"]
     assert isinstance(tg, list)
-    assert len(tg) <= 10
+    assert len(tg) <= 5
     if tg:
         assert "username" in tg[0]
         assert "change" in tg[0]
