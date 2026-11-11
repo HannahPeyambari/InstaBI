@@ -87,6 +87,13 @@ def overview(db: Session = Depends(get_db)):
             latest_t = max(window)
             series.append({"ts": latest_t.isoformat(), "followers": by_time[latest_t]})
 
+    # Net followers gained per run interval (delta vs previous point).
+    for i, point in enumerate(series):
+        if i == 0:
+            point["gained"] = 0
+        else:
+            point["gained"] = point["followers"] - series[i - 1]["followers"]
+
     return {
         "total_handles": len(handles),
         "active_handles": len(active),
