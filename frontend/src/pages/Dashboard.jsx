@@ -17,6 +17,7 @@ export default function Dashboard() {
       const s = await api.schedulerStatus();
       const f = await api.listFailed();
       setData({ ...o, schedule: s, failed: f });
+      setLbVersion(v => v + 1);
     } finally {
       setLoading(false);
     }
@@ -24,6 +25,24 @@ export default function Dashboard() {
   useEffect(() => {
     load();
   }, []);
+
+  const [period, setPeriod] = useState(7);
+  const [sort, setSort] = useState("gained");
+  const [lb, setLb] = useState(null);
+
+  const [lbError, setLbError] = useState("");
+  const [lbVersion, setLbVersion] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    setLb(null);
+    setLbError("");
+    api.leaderboard(period, sort).then(result => {
+      if (!cancelled) setLb(result);
+    }).catch(err => {
+      if (!cancelled) setLbError(err.message);
+    });
+    return () => { cancelled = true; };
+  }, [period, sort, lbVersion]);
 
   async function runNow() {
     setBusy(true);
@@ -202,6 +221,46 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 18 }}>
+        <div className="spread" style={{ marginBottom: 10, flexWrap: "wrap", gap: 12 }}>
+          <strong>🏆 Growth leaderboard · Top 20</strong>
+          <div className="row">
+            <label>Period {" "}
+              <select value={period} onChange={e => setPeriod(Number(e.target.value))}>
+                {[1, 7, 14, 30, 90].map(days => <option key={days} value={days}>{days === 1 ? "1 day" : `${days} days`}</option>)}
+              </select>
+            </label>
+            <label>Rank by {" "}
+              <select value={sort} onChange={e => setSort(e.target.value)}>
+                <option value="gained">Followers gained</option>
+                <option value="pct">Percentage growth</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <p className="faint">Compared with the last successful snapshot at or before {period} day(s) before each account’s latest check. Hover dates to see exact capture times. Accounts without enough history are omitted; percentage growth from zero is unavailable.</p>
+        {lbError ? <div role="alert">Could not load leaderboard: {lbError}</div> : !lb ? (
+          <div className="empty">Loading leaderboard…</div>
+        ) : lb.entries.length ? (
+          <div style={{ overflowX: "auto" }}>
+            <table>
+              <thead><tr><th>#</th><th>Account</th><th>Followers (then)</th><th>Followers (now)</th><th>Gained</th><th>% Growth</th><th>Baseline</th><th>Latest check</th></tr></thead>
+              <tbody>{lb.entries.map((entry, i) => (
+                <tr key={entry.username}>
+                  <td><span className={`rank ${i < 3 ? `r${i + 1}` : ""}`}>{i + 1}</span></td>
+                  <td><strong>@{entry.username}</strong></td>
+                  <td>{fmtNum(entry.followers_then)}</td><td>{fmtNum(entry.followers_now)}</td>
+                  <td className={`delta ${entry.gained > 0 ? "up" : entry.gained < 0 ? "down" : ""}`}>{entry.gained === 0 ? "0" : fmtDelta(entry.gained)}</td>
+                  <td className={`delta ${entry.pct > 0 ? "up" : entry.pct < 0 ? "down" : ""}`}>{entry.pct == null ? "—" : `${entry.pct > 0 ? "+" : ""}${entry.pct.toFixed(2)}%`}</td>
+                  <td title={fmtTime(entry.baseline_at)}>{fmtTime(entry.baseline_at)}</td>
+                  <td title={fmtTime(entry.latest_at)}>{fmtTime(entry.latest_at)}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        ) : <div className="empty">No accounts have enough history for this period yet. Keep scheduled checks running or select a shorter period.</div>}
       </div>
 
       <div className="card">
