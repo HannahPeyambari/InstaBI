@@ -54,6 +54,8 @@ export const api = {
   deleteFailed: () => request("/api/handles/delete-failed", { method: "POST" }),
 
   overview: () => request("/api/overview"),
+  leaderboard: (period = 7, sort = "gained") =>
+    request(`/api/leaderboard?period=${period}&sort=${sort}`),
   compare: (limit = 50) => request(`/api/compare?limit=${limit}`),
   snapshots: (limit = 200) => request(`/api/snapshots?limit=${limit}`),
   handleSnapshots: (id) => request(`/api/handles/${id}/snapshots`),

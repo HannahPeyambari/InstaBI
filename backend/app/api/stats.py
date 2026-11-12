@@ -106,6 +106,47 @@ def overview(db: Session = Depends(get_db)):
     }
 
 
+@router.get("/leaderboard")
+def leaderboard(
+    period: int = Query(7, ge=1, le=365, description="Lookback period in days"),
+    sort: str = Query("gained", pattern="^(gained|pct)$"),
+    db: Session = Depends(get_db),
+):
+    """Rank active handles by follower growth over a configurable period."""
+    handles = db.scalars(select(models.Handle).where(models.Handle.active.is_(True))).all()
+    latest = _latest_snapshots(db)
+    entries = []
+    for h in handles:
+        snap = latest.get(h.id)
+        if not snap or snap.status != "ok":
+            continue
+        # Baseline: most recent successful snapshot at or before latest − period.
+        baseline = db.scalar(
+            select(models.Snapshot).where(
+                models.Snapshot.handle_id == h.id,
+                models.Snapshot.status == "ok",
+                models.Snapshot.captured_at <= snap.captured_at - timedelta(days=period),
+            ).order_by(models.Snapshot.captured_at.desc(), models.Snapshot.id.desc()).limit(1)
+        )
+        if not baseline:
+            continue
+        gained = snap.follower_count - baseline.follower_count
+        pct = (gained / baseline.follower_count) * 100 if baseline.follower_count else None
+        entries.append(
+            {
+                "username": h.username,
+                "followers_now": snap.follower_count,
+                "followers_then": baseline.follower_count,
+                "gained": gained,
+                "pct": round(pct, 2) if pct is not None else None,
+                "baseline_at": baseline.captured_at.isoformat(),
+                "latest_at": snap.captured_at.isoformat(),
+            }
+        )
+    entries.sort(key=lambda e: (-(e[sort] if e[sort] is not None else float("-inf")), e["username"]))
+    return {"period": period, "sort": sort, "entries": entries[:20]}
+
+
 @router.get("/handles/{handle_id}/snapshots", response_model=list[SnapshotOut])
 def handle_snapshots(handle_id: int, db: Session = Depends(get_db)):
     h = db.get(models.Handle, handle_id)
