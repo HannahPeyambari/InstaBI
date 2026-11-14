@@ -19,6 +19,8 @@ _KEY = "runtime_overrides"
 
 # Keys that may be changed at runtime.
 EDITABLE = {
+    "telegram_bot_token", "telegram_chat_id", "telegram_thread_id",
+    "telegram_enabled", "telegram_period",
     "scraper_provider",        # mock | instagrapi
     "schedule_cron",
     "schedule_enabled",
@@ -30,7 +32,7 @@ EDITABLE = {
 }
 
 # Keys whose values are secrets (masked in API responses).
-SECRET_KEYS = {"insta_password"}
+SECRET_KEYS = {"insta_password", "telegram_bot_token"}
 
 
 def _load_overrides() -> dict:

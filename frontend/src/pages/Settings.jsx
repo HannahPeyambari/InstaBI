@@ -11,6 +11,7 @@ export default function Settings() {
   const [cfg, setCfg] = useState(null);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
   const [health, setHealth] = useState({ ok: false, message: "" });
   const toast = useToast();
 
@@ -38,7 +39,7 @@ export default function Settings() {
     try {
       const res = await api.updateSettings(form);
       toast("Settings saved", "success");
-      setHealth(await api.getSettings().then((r) => r.health));
+      await load();
     } catch (err) {
       toast(err.message, "error");
     } finally {
@@ -166,6 +167,41 @@ export default function Settings() {
             />
             <div className="hint">Pacing helps avoid Instagram rate limits. 0 disables delay.</div>
           </div>
+        </div>
+
+        <div className="card" style={{ marginBottom: 16 }}>
+          <strong>Telegram daily report</strong>
+          <p className="hint">Posts the trend chart and both growth leaderboards every 24 hours while this app is running. First automatic send is 24 hours after enabling. Restarting the app or saving settings restarts the interval. Reports use stored data; keep scheduled checks enabled.</p>
+          <div className="field">
+            <label>Bot token (private)</label>
+            <input type="password" autoComplete="off" value={form.telegram_bot_token === "********" ? "" : form.telegram_bot_token || ""}
+              placeholder={form.telegram_bot_token === "********" ? "Token saved — leave unchanged to keep" : "Enter your replacement bot token"}
+              onChange={e => set("telegram_bot_token", e.target.value)} />
+            <div className="hint">Stored in the local database, masked in API responses. Protect your data folder and backups. Never share your token.</div>
+          </div>
+          <div className="field"><label>Group chat ID</label>
+            <input value={form.telegram_chat_id || ""} onChange={e => set("telegram_chat_id", e.target.value)} />
+          </div>
+          <div className="field"><label>Topic ID (0 for no topic)</label>
+            <input type="number" min="0" value={form.telegram_thread_id ?? 0} onChange={e => set("telegram_thread_id", Number(e.target.value))} />
+          </div>
+          <div className="field"><label>Leaderboard period</label>
+            <select value={form.telegram_period || 1} onChange={e => set("telegram_period", Number(e.target.value))}>
+              {[1,7,14,30,90].map(n => <option key={n} value={n}>{n} day(s)</option>)}
+            </select>
+          </div>
+          <div className="field"><label>Automatic delivery</label>
+            <select value={form.telegram_enabled ? "true" : "false"} onChange={e => set("telegram_enabled", e.target.value === "true")}>
+              <option value="false">Disabled</option><option value="true">Every 24 hours</option>
+            </select>
+          </div>
+          <button className="btn secondary" type="button" disabled={sending || saving} onClick={async () => {
+            setSending(true);
+            try { await api.telegramTest(); toast("Report sent to Telegram", "success"); }
+            catch (err) { toast(err.message, "error"); }
+            finally { setSending(false); }
+          }}>{sending ? "Sending…" : "Send test report"}</button>
+          <p className="hint">Save settings before testing. At least two days of successful captures are required. Destination: GCC and EcoAuto → Ecoauto - Instagram Scraper.</p>
         </div>
 
         <div className="row">

@@ -65,6 +65,7 @@ export const api = {
   runNow: () => request("/api/scheduler/run", { method: "POST" }),
   reschedule: () => request("/api/scheduler/reschedule", { method: "POST" }),
 
+  telegramTest: () => request("/api/settings/telegram/test", { method: "POST" }),
   getSettings: () => request("/api/settings"),
   updateSettings: (patch) => request("/api/settings", { method: "PUT", body: patch }),
 };

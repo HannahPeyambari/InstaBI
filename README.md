@@ -166,3 +166,28 @@ frontend/
 
 MIT — for personal/research use. You are responsible for how you use it and for
 complying with Instagram's Terms of Service.
+
+### Telegram daily reports
+
+In **Settings → Telegram daily report**, enter your bot token locally, the numeric
+chat ID, and optionally a forum topic ID (0 means no topic). Save, then click
+**Send test report**. Never commit or share your token; revoke exposed tokens in
+BotFather. Tokens are masked in API responses but stored in the local database;
+protect the data directory and backups.
+
+Reports contain a PNG with daily follower totals, net changes, and top-five
+leaderboards by absolute and percentage growth over the selected period.
+At least two distinct UTC capture days are required. Daily totals carry forward
+each account's last successful capture and include stored tracked history;
+changes in tracked accounts can therefore affect totals. Leaderboards use active
+accounts and the last successful baseline at or before the requested cutoff.
+Insufficient history is omitted; percentage growth from zero is unavailable.
+
+Enable automatic delivery to send every 24 hours, independently of the scrape
+schedule. The app and computer must remain running with internet access.
+The first automatic send occurs after 24 hours; application restarts, scheduler
+restarts, and settings saves restart the countdown. Downtime is not backfilled.
+Keep scheduled scraping enabled so reports contain fresh data. Failed deliveries
+are logged without credentials and retried at the next scheduled interval; use
+the test button to diagnose configuration issues. There are no automatic immediate
+retries (avoids duplicate sends after ambiguous network timeouts).

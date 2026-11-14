@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .. import runtime_config
 from ..scraper.manager import manager
@@ -14,6 +14,11 @@ router = APIRouter(prefix="/api/settings", tags=["settings"], dependencies=[Depe
 
 
 class SettingsPatch(BaseModel):
+    telegram_bot_token: Optional[str] = None
+    telegram_chat_id: Optional[str] = Field(None, pattern=r"^-?\d+$")
+    telegram_thread_id: Optional[int] = Field(None, ge=0)
+    telegram_enabled: Optional[bool] = None
+    telegram_period: Optional[int] = Field(None, ge=1, le=365)
     scraper_provider: Optional[str] = None
     schedule_cron: Optional[str] = None
     schedule_enabled: Optional[bool] = None
@@ -55,4 +60,14 @@ def update_settings(patch: SettingsPatch):
 
     start_scheduler()
 
-    return {"changes": changes, "settings": runtime_config.snapshot()}
+    return {"changes": {k: "********" if k in runtime_config.SECRET_KEYS else v for k, v in changes.items()}, "settings": runtime_config.snapshot()}
+
+
+@router.post("/telegram/test")
+def test_telegram():
+    from ..telegram_report import send_report
+    try:
+        send_report()
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from None
+    return {"ok": True}

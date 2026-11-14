@@ -55,6 +55,13 @@ class Settings(BaseSettings):
     # Session pickle path for instagrapi (persists login across restarts).
     session_file: str = str(DATA_DIR / "instagrapi_session.pkl")
 
+    # --- Telegram (disabled until configured locally) ---
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = "-1003859629054"
+    telegram_thread_id: int = 405
+    telegram_enabled: bool = False
+    telegram_period: int = 1
+
     # --- Scheduler ---
     # Cron expression (5 fields) OR a plain day-interval in hours.
     schedule_cron: str = "0 3 * * *"          # default: 03:00 daily
