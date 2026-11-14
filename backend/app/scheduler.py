@@ -30,6 +30,12 @@ def start_scheduler() -> None:
     from . import runtime_config
 
     scheduler.remove_all_jobs()
+    if runtime_config.get("telegram_enabled"):
+        scheduler.add_job(_telegram_job, "interval", hours=24, id="telegram_report",
+                          replace_existing=True, coalesce=True, max_instances=1,
+                          misfire_grace_time=3600)
+        if not scheduler.running:
+            scheduler.start()
     if not runtime_config.get("schedule_enabled"):
         log.info("Scheduler disabled by config")
         return
@@ -58,7 +64,7 @@ def get_status() -> dict:
 
     jobs = []
     try:
-        for job in scheduler.get_jobs():
+        for job in sorted(scheduler.get_jobs(), key=lambda j: j.id != "periodic_check"):
             jobs.append(
                 {
                     "id": job.id,
@@ -74,3 +80,12 @@ def get_status() -> dict:
         "provider": str(runtime_config.get("scraper_provider")),
         "jobs": jobs,
     }
+
+
+def _telegram_job():
+    from .telegram_report import send_report
+    try:
+        send_report()
+    except Exception:
+        # Do not log exceptions that might contain token-bearing URLs.
+        log.warning("Telegram report failed; check configuration, history and connectivity.")

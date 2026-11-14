@@ -19,3 +19,6 @@ instagrapi==3.2.8
 pytest==8.3.4
 pytest-asyncio==0.25.0
 httpx==0.28.1
+
+# --- Telegram chart rendering ---
+matplotlib==3.10.8
